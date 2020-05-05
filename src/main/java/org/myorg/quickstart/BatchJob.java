@@ -31,7 +31,7 @@ public class BatchJob {
 
 		// set up the execution environment
 		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-
+		env.setParallelism(5);
 		// get input data
 		DataSet<String> text = env.fromElements(
 				"Flink Spark Storm",
@@ -44,7 +44,7 @@ public class BatchJob {
 		DataSet<Tuple2<String, Integer>> counts =
 				text.flatMap(new LineSplitter())
 						.groupBy(0)
-						.sum(1);
+						.sum(1).setParallelism(1);
 
 		counts.printToErr();
 
