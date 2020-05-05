@@ -1,4 +1,4 @@
-/*
+package org.myorg.quickstart;/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-package org.myorg.quickstart;
-
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -29,7 +27,6 @@ public class BatchJob {
 
 	public static void main(String[] args) throws Exception {
 
-		// set up the execution environment
 		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 		env.setParallelism(5);
 		// get input data
