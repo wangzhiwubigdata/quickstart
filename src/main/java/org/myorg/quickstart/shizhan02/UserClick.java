@@ -30,6 +30,12 @@ public class UserClick {
     public void setAction(String action) {
         this.action = action;
     }
+
+    public UserClick(String userId, Long timestamp, String action) {
+        this.userId = userId;
+        this.timestamp = timestamp;
+        this.action = action;
+    }
 }
 
 enum UserAction{
