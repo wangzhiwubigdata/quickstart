@@ -13,7 +13,6 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 import org.roaringbitmap.longlong.Roaring64NavigableMap;
 
-import java.util.Base64;
 import java.util.Iterator;
 
 public class MyProcessWindowFunctionBitMap extends ProcessWindowFunction<UserClick,Tuple3<String,String, Integer>,String,TimeWindow>{
