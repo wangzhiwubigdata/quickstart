@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.runtime.state.memory.MemoryStateBackend;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -19,7 +20,7 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
 
 import java.util.Properties;
 
-public class PVUVCount {
+public class PVUVCountBitMap {
 
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -59,9 +60,16 @@ public class PVUVCount {
         });
 
         userClickSingleOutputStreamOperator
-                .windowAll(TumblingProcessingTimeWindows.of(Time.days(1), Time.hours(-8)))
+                .keyBy(new KeySelector<UserClick, String>() {
+                    @Override
+                    public String getKey(UserClick value) throws Exception {
+                        return value.getUserId();
+                    }
+                })
+                .window(TumblingProcessingTimeWindows.of(Time.days(1), Time.hours(-8)))
                 .trigger(ContinuousProcessingTimeTrigger.of(Time.seconds(20)))
-                .evictor(TimeEvictor.of(Time.seconds(0), true));
+                .evictor(TimeEvictor.of(Time.seconds(0), true))
+                .process(new MyProcessWindowFunction());
 
 
 
