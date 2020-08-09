@@ -5,13 +5,13 @@ import com.alibaba.fastjson.JSONObject;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
+import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.runtime.state.memory.MemoryStateBackend;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.evictors.TimeEvictor;
@@ -24,7 +24,7 @@ import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolC
 
 import java.util.Properties;
 
-public class PVUVCountKeyById {
+public class PVUVCountKeyByIdMysqlSink {
 
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -64,6 +64,11 @@ public class PVUVCountKeyById {
         });
 
         FlinkJedisPoolConfig conf = new FlinkJedisPoolConfig.Builder().setHost("localhost").setPort(6379).build();
+        String driverClass = "com.mysql.jdbc.Driver";
+        String dbUrl = "jdbc:mysql://127.0.0.1:3306/test";
+        String userNmae = "root";
+        String passWord = "123456";
+
 
         userClickSingleOutputStreamOperator
                 .keyBy(new KeySelector<UserClick, String>() {
@@ -76,8 +81,22 @@ public class PVUVCountKeyById {
                 .trigger(ContinuousProcessingTimeTrigger.of(Time.seconds(20)))
                 .evictor(TimeEvictor.of(Time.seconds(0), true))
                 .process(new MyProcessWindowFunction())
-                .addSink(new RedisSink<>(conf,new MyRedisSink()));
-    }//
+                .addSink(
+                        JdbcSink.sink(
+                                "replace into pvuv_result (type,value) values (?,?)",
+                                (ps, value) -> {
+                                    ps.setString(1, value.f1);
+                                    ps.setInt(2,value.f2);
+
+                                },
+                                new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
+                                        .withUrl(dbUrl)
+                                        .withDriverName(driverClass)
+                                        .withUsername(userNmae)
+                                        .withPassword(passWord)
+                                        .build())
+                        );
+    }
 
 
 
