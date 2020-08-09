@@ -151,7 +151,11 @@ under the License.
 			<!--<version>1.0</version>-->
 		<!--</dependency>-->
 
-
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-jdbc_2.11</artifactId>
+            <version>1.11.0</version>
+        </dependency>
 	</dependencies>
 
 	<build>
