@@ -69,7 +69,7 @@ public class PVUVCountKeyById {
                 .keyBy(new KeySelector<UserClick, String>() {
                     @Override
                     public String getKey(UserClick value) throws Exception {
-                        return value.getUserId();
+                        return DateUtil.timeStampToDate(value.getTimestamp());
                     }
                 })
                 .window(TumblingProcessingTimeWindows.of(Time.days(1), Time.hours(-8)))
