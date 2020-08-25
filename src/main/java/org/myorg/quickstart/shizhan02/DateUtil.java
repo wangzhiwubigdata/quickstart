@@ -1,9 +1,6 @@
 package org.myorg.quickstart.shizhan02;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
 import java.util.Date;
 
 public class DateUtil {
@@ -20,5 +17,4 @@ public class DateUtil {
     public static void main(String[] args) {
         System.out.println(timeStampToDate(System.currentTimeMillis()));
     }
-
 }
