@@ -4,11 +4,14 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.runtime.state.memory.MemoryStateBackend;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.evictors.TimeEvictor;
@@ -16,10 +19,12 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.triggers.ContinuousProcessingTimeTrigger;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
+import org.apache.flink.streaming.connectors.redis.RedisSink;
+import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolConfig;
 
 import java.util.Properties;
 
-public class PVUVCount {
+public class PVUVCountKeyById {
 
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -58,15 +63,20 @@ public class PVUVCount {
             }
         });
 
+        FlinkJedisPoolConfig conf = new FlinkJedisPoolConfig.Builder().setHost("localhost").setPort(6379).build();
+
         userClickSingleOutputStreamOperator
-                .windowAll(TumblingProcessingTimeWindows.of(Time.days(1), Time.hours(-8)))
+                .keyBy(new KeySelector<UserClick, String>() {
+                    @Override
+                    public String getKey(UserClick value) throws Exception {
+                        return DateUtil.timeStampToDate(value.getTimestamp());
+                    }
+                })
+                .window(TumblingProcessingTimeWindows.of(Time.days(1), Time.hours(-8)))
                 .trigger(ContinuousProcessingTimeTrigger.of(Time.seconds(20)))
-                .evictor(TimeEvictor.of(Time.seconds(0), true));
-
-
-
-
-
+                .evictor(TimeEvictor.of(Time.seconds(0), true))
+                .process(new MyProcessWindowFunction())
+                .addSink(new RedisSink<>(conf,new MyRedisSink()));
     }//
 
 

@@ -7,6 +7,10 @@ public class UserClick {
     private Long timestamp;
     private String action;
 
+    public UserClick() {
+
+    }
+
     public String getUserId() {
         return userId;
     }
